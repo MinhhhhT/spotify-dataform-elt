@@ -1,0 +1,29 @@
+config {
+    type: "incremental", 
+    schema: "dataform_staging",
+    name: "stg_track",
+    uniqueKey: ["track_uri"],
+    description: "Table stores track's data"
+}
+
+SELECT DISTINCT
+    RIGHT(s.track_uri, 22) AS track_nk,
+    s.track_uri, 
+    s.track_name, 
+    s.album_name, 
+
+    ${when(incremental(),
+        `t.load_time`,
+        `CURRENT_TIMESTAMP()`
+    )} AS load_time,
+
+    CURRENT_TIMESTAMP() AS updated_at,
+    'spotify' AS source_system
+FROM ${ref("stg_spotify_track_reference")} AS s
+
+${when(incremental(),
+    `LEFT JOIN ${self()} AS t
+        ON t.track_uri = s.track_uri`
+)}
+
+WHERE s.track_uri IS NOT NULL

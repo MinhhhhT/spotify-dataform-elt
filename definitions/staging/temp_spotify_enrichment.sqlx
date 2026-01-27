@@ -1,0 +1,6 @@
+config {
+    type: "declaration",
+    database: "spotify-analysis-482506",
+    schema: "staging",
+    name: "temp_spotify_enrichment"
+}

@@ -1,0 +1,32 @@
+config {
+    type: "incremental",
+    schema: "dataform_staging",
+    name: "stg_user",
+    uniqueKey: ["username"],
+    description: "Table stores information",
+    columns: {
+        user_nk: "User's natural key (username)",
+        load_time: "The time record was initially loaded", 
+        updated_at: "The time record was nearly updated"
+    }
+}
+
+SELECT  
+    s.username AS user_nk,
+    s.username, 
+    s.gender, 
+    s.birthdate, 
+
+    ${when(incremental(),
+        `t.load_time`,
+        `CURRENT_TIMESTAMP()`
+    )} AS load_time, 
+
+    CURRENT_TIMESTAMP() AS updated_at,
+    'spotify' AS source_system
+FROM ${ref("userdata")} AS s 
+
+${when(incremental(),
+    `LEFT JOIN ${self()} AS t 
+        ON s.username = t.username`
+)}

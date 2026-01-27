@@ -1,0 +1,71 @@
+config {
+    type: "incremental",
+    schema: "dataform_staging",
+    uniqueKey: ["search_key"],
+    description: "Spotify track reference table, enriched with Spotify API",
+    columns: {
+        search_key: "Key used for querying the Spotify API",
+        load_time: "The time record was loaded initially",
+        updated_at: "The time record was updated nearly"
+    }    
+}
+
+WITH history_data AS (
+    SELECT 
+        CONCAT(
+            'track:"', REGEXP_REPLACE(trackName, '[' '"]', ''),
+            '" artist:"', REGEXP_REPLACE(artistName, '[' '"]', ''), '"'
+        ) AS search_key,
+        trackName AS track_name, 
+        artistName AS artist_name
+    FROM (
+        SELECT 
+            trackName, 
+            artistName, 
+            ROW_NUMBER() OVER (
+                PARTITION BY 
+                    CONCAT(
+                        'track:"', REGEXP_REPLACE(trackName, '[' '"]', ''),
+                        '" artist:"', REGEXP_REPLACE(artistName, '[' '"]', ''), '"'
+                    )
+            ) AS rn
+        FROM ${ref("streaming_history_music")}
+    )
+    WHERE rn = 1
+),
+
+api_enrichment AS (
+    SELECT * 
+    FROM (
+        SELECT *,
+        ROW_NUMBER() OVER(
+            PARTITION BY search_key
+            ORDER BY load_time DESC
+        ) AS rn 
+        FROM ${ref("temp_spotify_enrichment")}
+    ) 
+    WHERE rn = 1
+)
+
+SELECT 
+    COALESCE(e.search_key, h.search_key) AS search_key, 
+    e.track_uri,
+    COALESCE(e.track_name, h.track_name) AS track_name, 
+    e.album_uri, 
+    e.album_name, 
+    e.artist_uri, 
+    COALESCE(e.artist_name, h.artist_name) AS artist_name, 
+
+    ${when(incremental(), 
+        `t.load_time`,  
+        `CURRENT_TIMESTAMP()`
+    )} AS load_time, 
+
+    CURRENT_TIMESTAMP() AS updated_at
+FROM history_data AS h 
+LEFT JOIN api_enrichment AS e 
+    ON h.search_key = e.search_key
+${when(incremental(), 
+    `LEFT JOIN ${self()} AS t 
+    ON h.search_key = t.search_key`
+)}
