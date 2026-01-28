@@ -1,0 +1,43 @@
+config {
+    type: "incremental",
+    schema: "dataform_staging",
+    name: "stg_track_artist",
+    uniqueKey: ["track_uri", "artist_uri"], 
+    description: "The table shows the one-to-many relationship between a song and its aritst; a song can have multiple artist"
+}
+
+WITH cleaned_data AS (
+    SELECT DISTINCT 
+        track_uri, 
+        track_name, 
+        TRIM(uri) AS artist_uri, 
+        TRIM(name) AS artist_name
+    FROM ${ref("stg_spotify_track_reference")} AS re, 
+    UNNEST(SPLIT(re.artist_uri, ',')) AS uri WITH OFFSET pos1, 
+    UNNEST(SPLIT(re.artist_name, ',')) AS name WITH OFFSET pos2
+    WHERE pos1 = pos2 
+      AND track_uri IS NOT NULL 
+      AND artist_uri IS NOT NULL 
+)
+
+SELECT 
+    CONCAT(s.track_uri, s.artist_uri) AS track_artist_nk, 
+    s.track_uri, 
+    s.track_name, 
+    s.artist_uri, 
+    s.artist_name, 
+
+    ${when(incremental(),
+        `COALESCE(t.load_time, TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE))`, 
+        `TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE)`
+    )} AS load_time, 
+
+    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE) AS updated_at, 
+    'spotify' AS source_system
+FROM cleaned_data AS s 
+
+${when(incremental(),
+    `LEFT JOIN ${self()} AS t
+        ON t.track_uri = s.track_uri
+        AND t.artist_uri = s.artist_uri`
+)}

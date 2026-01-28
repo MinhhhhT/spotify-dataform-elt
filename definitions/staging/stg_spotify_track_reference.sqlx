@@ -10,11 +10,11 @@ config {
     }    
 }
 
-WITH history_data AS (
+WITH cleaned_streaming_history_data AS (
     SELECT 
         CONCAT(
-            'track:"', REGEXP_REPLACE(trackName, '[' '"]', ''),
-            '" artist:"', REGEXP_REPLACE(artistName, '[' '"]', ''), '"'
+            'track:"', REPLACE(REPLACE(trackName, '"', ''), "'", ''),
+            '" artist:"', REPLACE(REPLACE(artistName, '"', ''), "'", ''), '"'
         ) AS search_key,
         trackName AS track_name, 
         artistName AS artist_name
@@ -25,8 +25,8 @@ WITH history_data AS (
             ROW_NUMBER() OVER (
                 PARTITION BY 
                     CONCAT(
-                        'track:"', REGEXP_REPLACE(trackName, '[' '"]', ''),
-                        '" artist:"', REGEXP_REPLACE(artistName, '[' '"]', ''), '"'
+                        'track:"', TRIM(LOWER(REPLACE(REPLACE(trackName, '"', ''), "'", ''))),
+                        '" artist:"', TRIM(LOWER(REPLACE(REPLACE(artistName, '"', ''), "'", ''))), '"'
                     )
             ) AS rn
         FROM ${ref("streaming_history_music")}
@@ -57,12 +57,13 @@ SELECT
     COALESCE(e.artist_name, h.artist_name) AS artist_name, 
 
     ${when(incremental(), 
-        `t.load_time`,  
-        `CURRENT_TIMESTAMP()`
+        `COALESCE(t.load_time, TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE))`,  
+        `TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE)`
     )} AS load_time, 
 
-    CURRENT_TIMESTAMP() AS updated_at
-FROM history_data AS h 
+    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE) AS updated_at, 
+    'spotify' AS source_system
+FROM cleaned_streaming_history_data AS h 
 LEFT JOIN api_enrichment AS e 
     ON h.search_key = e.search_key
 ${when(incremental(), 

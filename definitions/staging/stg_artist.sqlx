@@ -1,0 +1,37 @@
+config {
+    type: "incremental",
+    schema: "dataform_staging",
+    name: "stg_artist",
+    description: "Table stores artist's metadata",
+    uniqueKey: ["artist_uri"]
+}
+
+WITH cleaned_data AS (
+    SELECT DISTINCT 
+        TRIM(uri) AS artist_uri, 
+        TRIM(name) AS artist_name
+    FROM ${ref("stg_spotify_track_reference")} AS re,
+    UNNEST(SPLIT(re.artist_uri, ',')) AS uri WITH OFFSET pos1, 
+    UNNEST(SPLIT(re.artist_name, ',')) AS name WITH OFFSET pos2
+    WHERE pos1 = pos2 
+      AND artist_uri IS NOT NULL 
+)
+
+SELECT 
+    RIGHT(s.artist_uri, 22) AS artist_nk, 
+    s.artist_uri, 
+    s.artist_name,
+    
+    ${when(incremental(),
+        `COALESCE(t.load_time, TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE))`,
+        `TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE)`
+    )} AS load_time, 
+
+    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE) AS updated_at, 
+    'spotify' AS source_system
+FROM cleaned_data s 
+
+${when(incremental(),
+    `LEFT JOIN ${self()} AS t
+        ON t.artist_uri = s.artist_uri`
+)}

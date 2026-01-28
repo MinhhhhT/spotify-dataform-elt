@@ -13,11 +13,11 @@ SELECT DISTINCT
     s.album_name, 
 
     ${when(incremental(),
-        `t.load_time`,
-        `CURRENT_TIMESTAMP()`
+        `COALESCE(t.load_time, TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE))`,
+        `TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE)`
     )} AS load_time,
 
-    CURRENT_TIMESTAMP() AS updated_at,
+    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE) AS updated_at,
     'spotify' AS source_system
 FROM ${ref("stg_spotify_track_reference")} AS s
 

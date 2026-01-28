@@ -1,0 +1,34 @@
+config {
+    type: "incremental",
+    schema: "dataform_staging",
+    name: "stg_album",
+    uniqueKey: ["album_uri"],
+    description: "The table stores album metadata"
+}
+
+WITH cleaned_data AS (
+    SELECT DISTINCT 
+        album_uri, 
+        album_name 
+    FROM ${ref("stg_spotify_track_reference")}
+    WHERE album_uri IS NOT NULL 
+)
+
+SELECT 
+    RIGHT(s.album_uri, 22) AS album_sk, 
+    s.album_uri, 
+    s.album_name, 
+
+    ${when(incremental(),
+        `COALESCE(t.load_time, TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE))`,
+        `TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE)`
+    )} AS load_time, 
+
+    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE) AS updated_at,
+    'spotify' AS source_system
+FROM cleaned_data AS s 
+
+${when(incremental(), 
+    `LEFT JOIN ${self()} AS t
+        ON t.album_uri = s.album_uri`
+)}
