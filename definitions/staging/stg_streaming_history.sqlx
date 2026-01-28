@@ -1,0 +1,83 @@
+config {
+    type: "incremental", 
+    schema: "dataform_staging",
+    partitionBy: "play_date",
+    name: "stg_streaming_history",
+    clusterBy: ["play_nk"], 
+    uniqueKey: ["play_nk"],
+    description: "The table stores user streaming history"
+}
+
+WITH aggregated_streaming_history AS (
+    SELECT 
+        trackName, 
+        artistName, 
+        endTime, 
+        SUM(msPlayed) AS msPlayed
+    FROM ${ref("streaming_history_music")}
+    GROUP BY 1, 2, 3
+),
+
+cleaned_streaming_data AS (
+    SELECT 
+        CONCAT(trackName, artistName, endTime) AS play_nk,
+        trackName AS track_name, 
+        artistName AS artist_name,
+        endTime AS ended_at,
+        ROUND(msPlayed/1000) AS seconds_played, 
+        DATE(endTime) AS play_date, 
+        TIMESTAMP_TRUNC(
+            TIMESTAMP_SUB(endTime, INTERVAL msPlayed MILLISECOND),
+            MINUTE
+         ) AS played_at
+    FROM aggregated_streaming_history
+
+    -- Checking if new data is loaded into
+    -- ${when(incremental(), 
+    --     `WHERE endTime > (SELECT max(ended_at) FROM ${self()})`
+    -- )}
+), 
+
+lookup_metadata AS (
+    SELECT DISTINCT 
+        track_uri, 
+        track_name, 
+        artist_uri, 
+        artist_name,
+        album_uri,  
+        album_name 
+    FROM ${ref("stg_spotify_track_reference")}
+    WHERE track_uri IS NOT NULL 
+)
+
+SELECT
+    s.play_nk, 
+    NULL AS user_nk, 
+    l.track_uri, 
+    l.artist_uri, 
+    l.album_uri, 
+    s.seconds_played, 
+    s.played_at, 
+    s.play_date, 
+    s.ended_at, 
+
+    ${when(incremental(), 
+        `COALESCE(t.load_time, TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE))`, 
+        `TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE)`
+    )} AS load_time,
+
+    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE) AS updated_at,
+    'spotify' AS source_system
+FROM cleaned_streaming_data AS s 
+LEFT JOIN lookup_metadata AS l 
+    ON s.track_name = l.track_name
+    AND s.artist_name = l.artist_name
+
+${when(incremental(), 
+    `LEFT JOIN ${self()} AS t
+        ON t.play_nk = s.play_nk`
+)}
+
+
+
+
