@@ -20,6 +20,6 @@ SELECT
     END AS is_weekend, 
     FALSE AS is_holiday, 
     ${utils.get_batch_id()} AS dwh_batch_id, 
-    ${utils.get_updated_time()} AS updated_at
+    ${utils.get_current_datetime()} AS updated_at
 FROM 
     UNNEST(GENERATE_DATE_ARRAY('2000-01-01', '2050-12-31')) AS d

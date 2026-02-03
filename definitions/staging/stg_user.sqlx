@@ -18,11 +18,11 @@ SELECT
     s.birthdate, 
 
     ${when(incremental(),
-        `COALESCE(t.load_time, TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE))`,
-        `TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE)`
+        `COALESCE(t.load_time, ${utils.get_current_datetime()})`,
+        `${utils.get_current_datetime()}`
     )} AS load_time, 
 
-    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE) AS updated_at,
+    ${utils.get_current_datetime()} AS updated_at,
     'spotify' AS source_system
 FROM ${ref("userdata")} AS s 
 

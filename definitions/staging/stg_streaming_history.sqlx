@@ -62,12 +62,12 @@ SELECT
     s.ended_at, 
 
     ${when(incremental(), 
-        `COALESCE(t.load_time, TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE))`, 
-        `TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE)`
+        `COALESCE(t.load_time, ${utils.get_current_datetime()})`, 
+        `${utils.get_current_datetime()}`
     )} AS load_time,
 
-    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE) AS updated_at,
-    'spotify' AS source_system
+    ${utils.get_current_datetime()} AS updated_at,
+    '${dataform.projectConfig.vars.source_name}' AS source_system
 FROM cleaned_streaming_data AS s 
 LEFT JOIN lookup_metadata AS l 
     ON s.track_name = l.track_name

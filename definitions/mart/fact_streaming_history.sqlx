@@ -16,7 +16,7 @@ SELECT
     ${utils.to_vn_timestamp("played_at")} AS played_at, 
     DATE(${utils.to_vn_timestamp("ended_at")}) AS played_date, 
     ${utils.to_vn_timestamp("ended_at")} AS ended_at, 
-    ${utils.get_updated_time()} AS updated_at, 
+    ${utils.get_current_datetime()} AS updated_at, 
     ${utils.get_batch_id()} AS dwh_batch_id,
     '${dataform.projectConfig.vars.source_name}' AS source_system
 FROM   
