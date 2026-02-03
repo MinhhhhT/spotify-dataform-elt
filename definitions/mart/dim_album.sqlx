@@ -1,0 +1,17 @@
+config {
+    type: "incremental", 
+    schema: "dataform_mart", 
+    name: "dim_album", 
+    uniqueKey: ["album_sk"], 
+    description: "Dim album table stores album's metadata"
+}
+
+SELECT 
+    ${utils.generate_sk("album_uri")} AS album_sk, 
+    album_uri, 
+    album_name, 
+    ${utils.get_updated_time()} AS updated_time, 
+    ${utils.get_batch_id()} AS dwh_batch_id,
+    '${dataform.projectConfig.vars.source_name}' AS source_system 
+FROM 
+    ${ref("stg_album")}

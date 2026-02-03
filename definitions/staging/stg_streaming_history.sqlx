@@ -34,7 +34,7 @@ cleaned_streaming_data AS (
 
     -- Checking if new data is loaded into
     -- ${when(incremental(), 
-    --     `WHERE endTime > (SELECT max(ended_at) FROM ${self()})`
+    --     `WHERE endTime > (SELECT TIMESTAMP_SUB(MAX(ended_at), INTERVAL 30 DAY) FROM ${self()})`
     -- )}
 ), 
 

@@ -1,0 +1,18 @@
+config {
+    type: "incremental",
+    schema: "dataform_mart",
+    name: "dim_user",
+    uniqueKey: ["user_sk"],
+    description: "Table storages dimension user's data"
+}
+
+SELECT
+  ${utils.generate_sk("username")} AS user_sk,
+  username,
+  gender,
+  birthdate,
+  ${utils.get_updated_time()} AS updated_at,
+  ${utils.get_batch_id()} AS dwh_batch_id,
+  '${dataform.projectConfig.vars.source_name}' AS source_system
+FROM
+  ${ref("stg_user")}

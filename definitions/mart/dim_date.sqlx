@@ -1,0 +1,25 @@
+config {
+    type: "table", 
+    schema: "dataform_mart", 
+    name: "dim_date", 
+    description: "Dim date table stores date's metadata"
+}
+
+SELECT 
+    CAST(FORMAT_DATE('%Y%m%d', d) AS INT64) AS date_sk, 
+    d AS full_date, 
+    FORMAT_DATE('%A', d) AS day_of_week, 
+    EXTRACT(DAY FROM d) AS day_of_month, 
+    EXTRACT(MONTH FROM d) AS month, 
+    FORMAT_DATE('%B', d) AS month_name, 
+    EXTRACT(QUARTER FROM d) AS quarter, 
+    EXTRACT(YEAR FROM d) AS year,
+    CASE 
+        WHEN FORMAT_DATE('%u', d) IN ('6', '7') THEN TRUE 
+        ELSE FALSE
+    END AS is_weekend, 
+    FALSE AS is_holiday, 
+    ${utils.get_batch_id()} AS dwh_batch_id, 
+    ${utils.get_updated_time()} AS updated_at
+FROM 
+    UNNEST(GENERATE_DATE_ARRAY('2000-01-01', '2050-12-31')) AS d

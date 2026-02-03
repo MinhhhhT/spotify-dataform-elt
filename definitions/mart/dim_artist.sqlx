@@ -1,0 +1,17 @@
+config {
+    type: "incremental", 
+    schema: "dataform_mart", 
+    name: "dim_artist", 
+    uniqueKey: ["artist_sk"], 
+    description: "Dim artist table stores artist's metadata"
+}
+
+SELECT 
+    ${utils.generate_sk("artist_uri")} AS artist_sk, 
+    artist_uri, 
+    artist_name, 
+    ${utils.get_updated_time()} As updated_at, 
+    ${utils.get_batch_id()} AS dwh_batch_id, 
+    '${dataform.projectConfig.vars.source_name}' AS source_system
+FROM 
+    ${ref("stg_artist")}
