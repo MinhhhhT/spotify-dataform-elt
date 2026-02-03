@@ -2,3 +2,6 @@ defaultProject: spotify-analysis-482506
 defaultDataset: dataform
 defaultAssertionDataset: dataform_assertions
 dataformCoreVersion: 3.0.37
+vars: {
+    source_name: "spotify"
+}

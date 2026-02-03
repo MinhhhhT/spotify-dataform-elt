@@ -1,0 +1,20 @@
+config {
+    type: "incremental",
+    schema: "dataform_mart", 
+    name: "dim_track_artist", 
+    uniqueKey: ["track_artist_sk"], 
+    description: "Dim track-artist table stores and implements a relationship 1:M between tracks and artists"
+}
+
+SELECT 
+    CONCAT(
+        ${utils.generate_sk("track_uri")}, 
+        ${utils.generate_sk("artist_uri")}
+    ) AS track_artist_sk, 
+    ${utils.generate_sk("track_uri")} AS track_sk, 
+    ${utils.generate_sk("artist_uri")} AS artist_sk, 
+    ${utils.get_updated_time()} AS updated_time, 
+    ${utils.get_batch_id()} AS dwh_batch_id, 
+    '${dataform.projectConfig.vars.source_name}' AS source_system
+FROM 
+    ${ref("stg_track_artist")}

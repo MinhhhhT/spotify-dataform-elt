@@ -1,0 +1,23 @@
+config {
+    type: "incremental", 
+    schema: "dataform_mart", 
+    name: "fact_streaming_history", 
+    uniqueKey: ["play_sk"], 
+    description: "Fact streaming history table stores user's streaming metadata"
+}
+
+SELECT 
+    ${utils.generate_sk("play_nk")} AS play_sk,
+    ${utils.generate_sk("track_uri")} AS track_sk, 
+    ${utils.generate_sk("artist_uri")} AS artist_sk, 
+    ${utils.generate_sk("album_uri")} AS album_sk, 
+    CAST(FORMAT_DATE('%Y%m%d', DATE(${utils.to_vn_timestamp("ended_at")})) AS INT64) AS date_sk,
+    seconds_played, 
+    ${utils.to_vn_timestamp("played_at")} AS played_at, 
+    DATE(${utils.to_vn_timestamp("ended_at")}) AS played_date, 
+    ${utils.to_vn_timestamp("ended_at")} AS ended_at, 
+    ${utils.get_updated_time()} AS updated_at, 
+    ${utils.get_batch_id()} AS dwh_batch_id,
+    '${dataform.projectConfig.vars.source_name}' AS source_system
+FROM   
+    ${ref("stg_streaming_history")}
