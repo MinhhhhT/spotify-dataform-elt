@@ -11,7 +11,7 @@ SELECT
     track_uri, 
     track_name, 
     album_name, 
-    ${utils.get_updated_time()} AS updated_at, 
+    ${utils.get_current_datetime()} AS updated_at, 
     ${utils.get_batch_id()} AS dwh_batch_id, 
     '${dataform.projectConfig.vars.source_name}' AS source_system
 FROM ${ref("stg_track")}

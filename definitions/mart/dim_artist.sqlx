@@ -10,7 +10,7 @@ SELECT
     ${utils.generate_sk("artist_uri")} AS artist_sk, 
     artist_uri, 
     artist_name, 
-    ${utils.get_updated_time()} As updated_at, 
+    ${utils.get_current_datetime()} As updated_at, 
     ${utils.get_batch_id()} AS dwh_batch_id, 
     '${dataform.projectConfig.vars.source_name}' AS source_system
 FROM 

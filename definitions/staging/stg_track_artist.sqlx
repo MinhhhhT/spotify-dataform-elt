@@ -2,7 +2,7 @@ config {
     type: "incremental",
     schema: "dataform_staging",
     name: "stg_track_artist",
-    uniqueKey: ["track_uri", "artist_uri"], 
+    uniqueKey: ["track_artist_nk"], 
     description: "The table shows the one-to-many relationship between a song and its aritst; a song can have multiple artist"
 }
 
@@ -28,12 +28,12 @@ SELECT
     s.artist_name, 
 
     ${when(incremental(),
-        `COALESCE(t.load_time, TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE))`, 
-        `TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE)`
+        `COALESCE(t.load_time, ${utils.get_current_datetime()})`, 
+        `${utils.get_current_datetime()}`
     )} AS load_time, 
 
-    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE) AS updated_at, 
-    'spotify' AS source_system
+    ${utils.get_current_datetime()} AS updated_at, 
+    '${dataform.projectConfig.vars.source_name}' AS source_system
 FROM cleaned_data AS s 
 
 ${when(incremental(),

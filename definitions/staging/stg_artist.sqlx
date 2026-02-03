@@ -3,7 +3,7 @@ config {
     schema: "dataform_staging",
     name: "stg_artist",
     description: "Table stores artist's metadata",
-    uniqueKey: ["artist_uri"]
+    uniqueKey: ["artist_nk"]
 }
 
 WITH cleaned_data AS (
@@ -23,12 +23,12 @@ SELECT
     s.artist_name,
     
     ${when(incremental(),
-        `COALESCE(t.load_time, TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE))`,
-        `TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE)`
+        `COALESCE(t.load_time, ${utils.get_current_datetime()})`,
+        `${utils.get_current_datetime()}`
     )} AS load_time, 
 
-    TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), MINUTE) AS updated_at, 
-    'spotify' AS source_system
+    ${utils.get_current_datetime()} AS updated_at, 
+    '${dataform.projectConfig.vars.source_name}' AS source_system
 FROM cleaned_data s 
 
 ${when(incremental(),
