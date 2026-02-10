@@ -1,0 +1,14 @@
+config {
+    type: "assertion", 
+    description: "Job will failed if error rate over 10%."
+}
+
+WITH summary AS (
+    SELECT 
+        (SELECT COUNT(*) FROM ${ref("stg_track_quarantine")}) AS error_count, 
+        (SELECT COUNT(*) FROM ${ref("stg_track")}) AS success_count
+)
+
+SELECT * 
+FROM summary 
+WHERE error_count > (success_count + error_count) * 0.1

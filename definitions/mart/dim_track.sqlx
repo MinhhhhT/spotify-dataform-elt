@@ -3,7 +3,12 @@ config {
     schema: "dataform_mart", 
     name: "dim_track", 
     uniqueKey: ["track_sk"], 
-    description: "Dim track table storages track's metadata"
+    description: "Dim track table storages track's metadata", 
+    dependencies: [
+        "dataform_staging_stg_track_assertions_rowConditions",
+        "dataform_staging_stg_track_assertions_uniqueKey_0",
+        "assert_stg_track_quarantine_error_rate"
+    ]
 }
 
 SELECT 

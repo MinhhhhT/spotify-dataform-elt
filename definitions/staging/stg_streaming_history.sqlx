@@ -4,51 +4,52 @@ config {
     partitionBy: "play_date",
     name: "stg_streaming_history",
     clusterBy: ["play_nk"], 
-    uniqueKey: ["play_nk"],
-    description: "The table stores user streaming history"
+    uniqueKey: ["play_nk"]
 }
 
-WITH aggregated_streaming_history AS (
-    SELECT 
-        trackName, 
-        artistName, 
-        endTime, 
-        SUM(msPlayed) AS msPlayed
-    FROM ${ref("streaming_history_music")}
-    GROUP BY 1, 2, 3
-),
+WITH 
+    --- Solving data fragment
+    aggregated_streaming_history AS (
+        SELECT 
+            trackName, 
+            artistName, 
+            endTime, 
+            SUM(msPlayed) AS msPlayed
+        FROM ${ref("streaming_history_music")}
+        GROUP BY 1, 2, 3
+    ),
 
-cleaned_streaming_data AS (
-    SELECT 
-        CONCAT(trackName, artistName, endTime) AS play_nk,
-        trackName AS track_name, 
-        artistName AS artist_name,
-        endTime AS ended_at,
-        ROUND(msPlayed/1000) AS seconds_played, 
-        DATE(endTime) AS play_date, 
-        TIMESTAMP_TRUNC(
-            TIMESTAMP_SUB(endTime, INTERVAL msPlayed MILLISECOND),
-            MINUTE
-         ) AS played_at
-    FROM aggregated_streaming_history
+    cleaned_streaming_data AS (
+        SELECT 
+            CONCAT(trackName, artistName, endTime) AS play_nk,
+            trackName AS track_name, 
+            artistName AS artist_name,
+            endTime AS ended_at,
+            ROUND(msPlayed/1000) AS seconds_played, 
+            DATE(endTime) AS play_date, 
+            TIMESTAMP_TRUNC(
+                TIMESTAMP_SUB(endTime, INTERVAL msPlayed MILLISECOND),
+                MINUTE
+            ) AS played_at
+        FROM aggregated_streaming_history
 
-    -- Checking if new data is loaded into
-    -- ${when(incremental(), 
-    --     `WHERE endTime > (SELECT TIMESTAMP_SUB(MAX(ended_at), INTERVAL 30 DAY) FROM ${self()})`
-    -- )}
-), 
+        -- Checking if new data is loaded into
+        -- ${when(incremental(), 
+        --     `WHERE endTime > (SELECT TIMESTAMP_SUB(MAX(ended_at), INTERVAL 30 DAY) FROM ${self()})`
+        -- )}
+    ), 
 
-lookup_metadata AS (
-    SELECT DISTINCT 
-        track_uri, 
-        track_name, 
-        artist_uri, 
-        artist_name,
-        album_uri,  
-        album_name 
-    FROM ${ref("stg_spotify_track_reference")}
-    WHERE track_uri IS NOT NULL 
-)
+    lookup_metadata AS (
+        SELECT DISTINCT 
+            track_uri, 
+            track_name, 
+            artist_uri, 
+            artist_name,
+            album_uri,  
+            album_name 
+        FROM ${ref("stg_spotify_track_reference")}
+        WHERE track_uri IS NOT NULL 
+    )
 
 SELECT
     s.play_nk, 

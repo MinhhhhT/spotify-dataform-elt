@@ -6,8 +6,18 @@ config {
     description: "Table stores information",
     columns: {
         user_nk: "User's natural key (username)",
-        load_time: "The time record was initially loaded", 
-        updated_at: "The time record was nearly updated"
+        username: "Spotify username",
+        gender: "Gender",
+        birthdate: "Date of birth",
+        load_time: docs.columns.load_time, 
+        updated_at: docs.columns.updated_at
+    },
+    assertions: {
+        uniqueKey: ["username"],
+        nonNull: ["username"],
+        rowConditions: [
+            'birthdate < current_date() AND birthdate > "1900-01-01"'
+        ]
     }
 }
 
