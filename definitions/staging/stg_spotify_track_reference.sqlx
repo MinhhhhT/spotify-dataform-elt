@@ -5,9 +5,15 @@ config {
     description: "Spotify track reference table, enriched with Spotify API",
     columns: {
         search_key: "Key used for querying the Spotify API",
-        load_time: "The time record was loaded initially",
-        updated_at: "The time record was updated nearly"
-    }    
+        track_uri: docs.columns.track_uri, 
+        track_name: docs.columns.track_name, 
+        artist_uri: docs.columns.artist_uri, 
+        artist_name: docs.columns.artist_name, 
+        album_uri: docs.columns.album_uri, 
+        album_name: docs.columns.album_name, 
+        load_time: docs.columns.load_time,
+        updated_at: docs.columns.updated_at
+    }
 }
 
 WITH cleaned_streaming_history_data AS (

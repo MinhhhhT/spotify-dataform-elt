@@ -1,0 +1,14 @@
+config {
+    type: "assertion", 
+    description: "Ensuring data in the quarantine table is really defective.",
+    tags: ["audit"]
+}
+
+SELECT 
+    track_uri, 
+    error_reason
+FROM ${ref("stg_track_quarantine")}
+WHERE 
+    (error_reason = 'MISSING KEY' AND track_uri IS NOT NULL AND LENGTH(TRIM(track_uri)) > 0)
+    OR 
+    (error_reason = 'MISSING_NAME' AND track_name IS NOT NULL AND LENGTH(TRIM(track_name)) > 0)

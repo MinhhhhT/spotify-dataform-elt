@@ -2,6 +2,10 @@ config {
     type: "incremental",
     schema: "dataform_mart",
     name: "dim_user",
+    dependencies: [
+      "dataform_staging_stg_user_assertions_rowConditions",
+      "dataform_staging_stg_user_assertions_uniqueKey_0"
+    ],
     uniqueKey: ["user_sk"],
     description: "Table storages dimension user's data"
 }

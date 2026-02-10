@@ -1,0 +1,29 @@
+config {
+    type: "assertion", 
+    description: "Checking the total records between the source data and the sum of clean plus quarantine data, both of these should be equal.", 
+    tags: ["audit"]
+}
+
+WITH 
+    source_metrics AS (
+        SELECT COUNT(*) As total_input 
+        FROM ${ref("stg_spotify_track_reference")}
+    ), 
+
+    clean_metrics AS (
+        SELECT COUNT(*) AS total_clean
+        FROM ${ref("dim_track")}
+    ), 
+
+    quarantine_metrics AS (
+        SELECT COUNT(*) AS total_error
+        FROM ${ref("stg_track_quarantine")}
+    )
+
+SELECT 
+    source_metrics.total_input, 
+    clean_metrics.total_clean, 
+    quarantine_metrics.total_error, 
+    (clean_metrics.total_clean + quarantine_metrics.total_error) AS total_processed
+FROM source_metrics, clean_metrics, quarantine_metrics
+WHERE source_metrics.total_input != (clean_metrics.total_clean + quarantine_metrics.total_error)

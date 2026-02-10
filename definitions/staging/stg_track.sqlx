@@ -3,10 +3,20 @@ config {
     schema: "dataform_staging",
     name: "stg_track",
     uniqueKey: ["track_nk"],
-    description: "Table stores track's data"
+    description: "Table stores track's data.",
+    columns: {
+        track_nk: "Track's natural key.",
+        track_uri: docs.columns.track_uri, 
+        track_name: docs.columns.track_name, 
+        album_name: docs.columns.album_name
+    }, 
+    assertions: {
+        uniqueKey: ["track_nk"],
+        nonNull: ["track_nk", "track_uri", "track_name"]
+    }
 }
 
-SELECT DISTINCT
+SELECT
     RIGHT(s.track_uri, 22) AS track_nk,
     s.track_uri, 
     s.track_name, 
@@ -19,11 +29,11 @@ SELECT DISTINCT
 
     ${utils.get_current_datetime()} AS updated_at,
     '${dataform.projectConfig.vars.source_name}' AS source_system
-FROM ${ref("stg_spotify_track_reference")} AS s
+FROM ${ref("stg_track_validation")} AS s
 
 ${when(incremental(),
     `LEFT JOIN ${self()} AS t
         ON t.track_uri = s.track_uri`
 )}
 
-WHERE s.track_uri IS NOT NULL
+WHERE validation_status = 'VALID'

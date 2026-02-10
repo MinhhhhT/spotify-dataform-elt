@@ -8,14 +8,18 @@ config {
 
 SELECT 
     ${utils.generate_sk("play_nk")} AS play_sk,
-    ${utils.generate_sk("track_uri")} AS track_sk, 
-    ${utils.generate_sk("artist_uri")} AS artist_sk, 
-    ${utils.generate_sk("album_uri")} AS album_sk, 
+
+    --- Using placeholder Unknown for NULL values
+    COALESCE(${utils.generate_sk("track_uri")}, 0) AS track_sk, 
+    COALESCE(${utils.generate_sk("artist_uri")}, 0) AS artist_sk, 
+    COALESCE(${utils.generate_sk("album_uri")}, 0) AS album_sk, 
+    
     CAST(FORMAT_DATE('%Y%m%d', DATE(${utils.to_vn_timestamp("ended_at")})) AS INT64) AS date_sk,
     seconds_played, 
     ${utils.to_vn_timestamp("played_at")} AS played_at, 
     DATE(${utils.to_vn_timestamp("ended_at")}) AS played_date, 
     ${utils.to_vn_timestamp("ended_at")} AS ended_at, 
+    
     ${utils.get_current_datetime()} AS updated_at, 
     ${utils.get_batch_id()} AS dwh_batch_id,
     '${dataform.projectConfig.vars.source_name}' AS source_system
