@@ -3,7 +3,10 @@ config {
     schema: "dataform_mart", 
     name: "fact_streaming_history", 
     uniqueKey: ["play_sk"], 
-    description: "Fact streaming history table stores user's streaming metadata"
+    description: "Fact streaming history table stores user's streaming metadata", 
+    dependencies: [
+        "assert_freshness_stg_streaming_history"   
+    ]
 }
 
 SELECT 

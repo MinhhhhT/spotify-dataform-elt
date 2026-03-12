@@ -3,7 +3,10 @@ config {
     schema: "dataform_mart", 
     name: "bridge_track_artist", 
     uniqueKey: ["track_artist_sk"], 
-    description: "Dim track-artist table stores and implements a relationship 1:M between tracks and artists"
+    description: "Dim track-artist table stores and implements a relationship 1:M between tracks and artists", 
+    dependencies: [
+        "assert_freshness_stg_track_artist"
+    ]
 }
 
 SELECT 

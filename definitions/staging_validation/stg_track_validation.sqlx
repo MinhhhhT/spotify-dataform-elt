@@ -1,7 +1,10 @@
 config {
-    type: "view", 
-    schema: "dataform_staging_validation"
+  type: "view",
+  schema: "dataform_staging_validation",
+  name: "stg_track_validation",
+  tags: ["staging", "validation"],
 }
+
 
 WITH ranked_data AS (
     SELECT 

@@ -1,7 +1,8 @@
 config {
     type: "incremental", 
     schema: "dataform_staging_error", 
-    description: "The table stores track data error (Missing, Duplicate,...).", 
+    name: "stg_album_quarantine", 
+    description: "Contains invalid album records that failed data quality checks.",
     tags: ["daily_error_check"], 
     uniqueKey: ["quarantine_id"],
     bigquery: {
@@ -12,10 +13,9 @@ config {
 
 SELECT 
     FARM_FINGERPRINT(
-        CONCAT(s.track_uri, s.validation_status) 
+        CONCAT(s.album_uri, s.validation_status) 
     ) AS quarantine_id,
-    s.track_uri,
-    s.track_name, 
+    s.album_uri,
     s.album_name, 
     s.validation_status AS error_reason,
 
@@ -25,13 +25,14 @@ SELECT
     )} AS first_seen_at,
 
     ${utils.get_current_datetime()} AS last_seen_at
-FROM ${ref("stg_track_validation")} AS s
+FROM ${ref("stg_album_validation")} AS s
 
 ${when(incremental(),
     `LEFT JOIN ${self()} AS t
         ON t.quarantine_id = FARM_FINGERPRINT(
-        CONCAT(s.track_name, s.validation_status) 
+        CONCAT(s.album_uri, s.validation_status) 
     )`
 )}
 
 WHERE validation_status != 'VALID'
+

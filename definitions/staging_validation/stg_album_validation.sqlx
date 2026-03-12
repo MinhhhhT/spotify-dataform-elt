@@ -1,0 +1,26 @@
+config {
+    type: "view", 
+    schema: "dataform_staging_validation", 
+    name: "stg_album_validation", 
+    description: "Applies data quality rules to the stg_album source data."
+
+}
+
+${
+    (function() {
+        const { generate_validation_sql } = require("includes/utils.js");
+        const rules = [
+            {
+                name: "album_id_is_not_null", 
+                expression: "album_uri IS NOT NULL"
+            }, 
+            {
+                name: "album_name_is_not_null", 
+                expression: "album_name IS NOT NULL"
+            }
+        ];
+
+        return generate_validation_sql(ref("stg_spotify_track_reference"), rules);
+    }) ()
+
+} 
