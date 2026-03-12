@@ -1,26 +1,19 @@
 config {
-    type: "view", 
-    schema: "dataform_staging_validation"
+  type: "view",
+  schema: "dataform_staging_validation",
+  name: "stg_track_validation",
+  tags: ["staging", "validation"],
 }
 
-WITH ranked_data AS (
-    SELECT 
-        track_uri, 
-        track_name, 
-        album_name, 
-        ROW_NUMBER() OVER(
-            PARTITION BY track_uri
-            ORDER BY updated_at 
-        ) AS rn 
-    FROM ${ref("stg_spotify_track_reference")}
-)
-
-SELECT 
-    *, 
-    CASE 
-        WHEN track_uri IS NULL OR LENGTH(TRIM(track_uri)) = 0 THEN 'MISSING_KEY'
-        WHEN track_name IS NULL OR LENGTH(TRIM(track_name)) = 0 THEN 'MISSING_NAME' 
-        WHEN rn > 1 THEN 'DUPLICATE'
-        ELSE 'VALID'
-    END AS validation_status
-FROM ranked_data
+SELECT
+  *,
+  CASE
+    WHEN track_uri IS NULL
+    OR track_uri = "" THEN "track_uri is null or empty"
+    WHEN track_name IS NULL
+    OR track_name = "" THEN "track_name is null or empty"
+    ELSE "valid"
+  END
+    AS validation_status
+FROM
+  ${ref("stg_spotify_track_reference")}

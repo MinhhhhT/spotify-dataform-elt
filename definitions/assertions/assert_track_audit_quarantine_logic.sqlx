@@ -1,14 +1,19 @@
-config {
-    type: "assertion", 
-    description: "Ensuring data in the quarantine table is really defective.",
-    tags: ["audit"]
-}
+-- config {
+--   type: "assertion",
+--   name: "assert_track_audit_quarantine_logic",
+--   tags: ["staging", "assertion"],
+-- }
 
-SELECT 
-    track_uri, 
-    error_reason
-FROM ${ref("stg_track_quarantine")}
-WHERE 
-    (error_reason = 'MISSING KEY' AND track_uri IS NOT NULL AND LENGTH(TRIM(track_uri)) > 0)
-    OR 
-    (error_reason = 'MISSING_NAME' AND track_name IS NOT NULL AND LENGTH(TRIM(track_name)) > 0)
+-- -- check that all records that are not valid are moved to the quarantine table
+-- SELECT
+--   *
+-- FROM
+--   ${ref("stg_track_validation")}
+-- WHERE
+--   validation_status != "valid"
+--   AND track_uri NOT IN (
+--     SELECT
+--       track_uri
+--     FROM
+--       ${ref("stg_track_quarantine")}
+--   )

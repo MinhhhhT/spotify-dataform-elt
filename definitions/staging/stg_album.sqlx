@@ -6,6 +6,28 @@ config {
     description: "The table stores album metadata"
 }
 
+-- SELECT DISTINCT
+--     RIGHT(s.album_uri, 22) AS album_nk, 
+--     s.album_uri, 
+--     s.album_name, 
+
+--     ${when(incremental(),
+--         `COALESCE(t.load_time, ${utils.get_current_datetime()})`,
+--         `${utils.get_current_datetime()}`
+--     )} AS load_time, 
+
+--     ${utils.get_current_datetime()} AS updated_at,
+--     '${dataform.projectConfig.vars.source_name}' AS source_system
+-- FROM ${ref("stg_spotify_track_reference")} AS s 
+
+-- ${when(incremental(), 
+--     `LEFT JOIN ${self()} AS t
+--         ON t.album_uri = s.album_uri`
+-- )}
+
+-- WHERE album_uri IS NOT NULL
+
+
 SELECT DISTINCT
     RIGHT(s.album_uri, 22) AS album_nk, 
     s.album_uri, 
@@ -18,11 +40,11 @@ SELECT DISTINCT
 
     ${utils.get_current_datetime()} AS updated_at,
     '${dataform.projectConfig.vars.source_name}' AS source_system
-FROM ${ref("stg_spotify_track_reference")} AS s 
+FROM ${ref("stg_album_validation")} AS s 
 
 ${when(incremental(), 
     `LEFT JOIN ${self()} AS t
         ON t.album_uri = s.album_uri`
 )}
 
-WHERE album_uri IS NOT NULL
+WHERE validation_status = 'VALID'

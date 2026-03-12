@@ -1,22 +1,31 @@
 config {
-    type: "incremental", 
-    schema: "dataform_mart", 
-    name: "dim_track", 
-    uniqueKey: ["track_sk"], 
-    description: "Dim track table storages track's metadata", 
-    dependencies: [
-        "dataform_staging_stg_track_assertions_rowConditions",
-        "dataform_staging_stg_track_assertions_uniqueKey_0",
-        "assert_stg_track_quarantine_error_rate"
-    ]
+  type: "table",
+  schema: "dataform_mart",
+  name: "dim_track",
+  tags: ["mart"],
+  dependencies: [
+    "assert_freshness_stg_track",
+    "assert_stg_track_quarantine_error_rate",
+    "dataform_staging_stg_track_assertions_uniqueKey_0", 
+    "dataform_staging_stg_track_assertions_rowConditions"
+  ],
+  columns: {
+    track_uri: "The Spotify URI for the track.",
+    track_name: "The name of the track.",
+    album_uri: "The Spotify URI for the album.",
+  },
+  assertions: {
+    uniqueKey: ["track_uri"],
+    rowConditions: [
+      'track_uri IS NOT NULL AND track_uri != ""',
+      'track_name IS NOT NULL AND track_name != ""',
+    ],
+  },
 }
 
-SELECT 
-    ${utils.generate_sk("track_uri")} AS track_sk, 
-    track_uri, 
-    track_name, 
-    album_name, 
-    ${utils.get_current_datetime()} AS updated_at, 
-    ${utils.get_batch_id()} AS dwh_batch_id, 
-    '${dataform.projectConfig.vars.source_name}' AS source_system
-FROM ${ref("stg_track")}
+SELECT
+  track_uri,
+  track_name,
+  album_uri
+FROM
+  ${ref("stg_track")}

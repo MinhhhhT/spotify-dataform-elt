@@ -3,7 +3,10 @@ config {
     schema: "dataform_mart", 
     name: "dim_album", 
     uniqueKey: ["album_sk"], 
-    description: "Dim album table stores album's metadata"
+    description: "Dim album table stores album's metadata", 
+    dependencies: [
+       "assert_freshness_stg_album" 
+    ]
 }
 
 SELECT 

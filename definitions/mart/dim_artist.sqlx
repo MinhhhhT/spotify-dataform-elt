@@ -3,7 +3,10 @@ config {
     schema: "dataform_mart", 
     name: "dim_artist", 
     uniqueKey: ["artist_sk"], 
-    description: "Dim artist table stores artist's metadata"
+    description: "Dim artist table stores artist's metadata", 
+    dependencies: [
+        "assert_freshness_stg_artist"
+    ]
 }
 
 SELECT 

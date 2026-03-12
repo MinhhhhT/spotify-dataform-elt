@@ -1,10 +1,10 @@
 const freshnessTargets = [
-    {table: "dim_user", dateCol: "updated_at", delayHours: 24}, 
-    {table: "dim_artist", dateCol: "updated_at", delayHours: 24}, 
-    {table: "dim_album", dateCol: "updated_at", delayHours: 24}, 
-    {table: "dim_track", dateCol: "updated_at", delayHours: 24}, 
-    {table: "bridge_track_artist", dateCol: "updated_at", delayHours: 24}, 
-    {table: "fact_streaming_history", dateCol: "updated_at", delayHours: 24}
+    {table: "stg_user", dateCol: "updated_at", delayHours: 24}, 
+    {table: "stg_artist", dateCol: "updated_at", delayHours: 24}, 
+    {table: "stg_album", dateCol: "updated_at", delayHours: 24}, 
+    {table: "stg_track", dateCol: "updated_at", delayHours: 24}, 
+    {table: "stg_track_artist", dateCol: "updated_at", delayHours: 24}, 
+    {table: "stg_streaming_history", dateCol: "updated_at", delayHours: 24}
 ];
 
 freshnessTargets.forEach(target => {

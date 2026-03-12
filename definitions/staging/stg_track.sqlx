@@ -1,15 +1,16 @@
 config {
-    type: "incremental", 
+    type: "incremental",
     schema: "dataform_staging",
     name: "stg_track",
     uniqueKey: ["track_nk"],
     description: "Table stores track's data.",
     columns: {
         track_nk: "Track's natural key.",
-        track_uri: docs.columns.track_uri, 
-        track_name: docs.columns.track_name, 
-        album_name: docs.columns.album_name
-    }, 
+        track_uri: "The Spotify URI for the track.",
+        track_name: "The name of the track.",
+        album_name: "The name of the album.",
+        album_uri: "The Spotify URI for the album."
+    },
     assertions: {
         uniqueKey: ["track_nk"],
         nonNull: ["track_nk", "track_uri", "track_name"]
@@ -18,9 +19,10 @@ config {
 
 SELECT
     RIGHT(s.track_uri, 22) AS track_nk,
-    s.track_uri, 
-    s.track_name, 
-    s.album_name, 
+    s.track_uri,
+    s.track_name,
+    s.album_name,
+    s.album_uri,
 
     ${when(incremental(),
         `COALESCE(t.load_time, ${utils.get_current_datetime()})`,
