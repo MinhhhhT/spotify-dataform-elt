@@ -1,24 +1,14 @@
 config {
-  type: "assertion",
-  name: "assert_stg_track_quarantine_error_rate",
-  tags: ["staging", "assertion"],
+    type: "assertion", 
+    description: "Job will failed if error rate over 10%."
 }
 
-WITH
-  validation_data AS (
-    SELECT
-      *
-    FROM
-      ${ref("stg_track_quarantine")}
-  )
-SELECT
-  SUM(
-    CASE
-      WHEN validation_status = "valid" THEN 1
-      ELSE 0
-    END
-  ) / COUNT(*) AS success_rate
-FROM
-  validation_data
-HAVING
-  success_rate <= 0.1
+WITH summary AS (
+    SELECT 
+        (SELECT COUNT(*) FROM ${ref("stg_track_quarantine")}) AS error_count, 
+        (SELECT COUNT(*) FROM ${ref("stg_track")}) AS success_count
+)
+
+SELECT * 
+FROM summary 
+WHERE error_count > (success_count + error_count) * 0.1
